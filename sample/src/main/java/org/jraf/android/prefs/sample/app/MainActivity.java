@@ -57,11 +57,21 @@ public class MainActivity extends Activity {
         persistPrefs.putFirstTime(true);
         Log.d(TAG, "firstTime=" + persistPrefs.getFirstTime());
         Log.d(TAG, "persistPrefs=" + persistPrefs.getAll());
+
+        MainActPrefs mainActPrefs = MainActPrefs.get(this);
+        mainActPrefs.putLastTime(System.currentTimeMillis());
+        Log.d(TAG, "lastTime=" + mainActPrefs.getLastTime());
+        Log.d(TAG, "mainActPrefs=" + mainActPrefs.getAll());
     }
 
     @Prefs(fileName = "MainActivity", fileMode = Context.MODE_PRIVATE)
     static class Persist {
         @DefaultBoolean(true)
         Boolean firstTime;
+    }
+
+    @Prefs(fileName = "MainActivity", fileMode = Context.MODE_PRIVATE, classNamePrefix = "MainAct")
+    static class Inner {
+        Long lastTime;
     }
 }

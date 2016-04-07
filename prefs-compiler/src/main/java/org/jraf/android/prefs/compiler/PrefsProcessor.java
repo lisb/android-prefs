@@ -80,19 +80,6 @@ public class PrefsProcessor extends AbstractProcessor {
         for (TypeElement te : annotations) {
             for (Element element : roundEnv.getElementsAnnotatedWith(te)) {
                 final TypeElement classElement = (TypeElement) element;
-                final StringBuilder classNamePrefixBuilder = new StringBuilder();
-                Element enclosingElement = classElement;
-                do {
-                    if (classNamePrefixBuilder.length() > 0) {
-                        classNamePrefixBuilder.insert(0, "$$");
-                    }
-                    classNamePrefixBuilder.insert(0, enclosingElement.getSimpleName());
-                    enclosingElement = enclosingElement.getEnclosingElement();
-                } while(enclosingElement instanceof TypeElement);
-
-                final CharSequence packageName = ((QualifiedNameable) enclosingElement).getQualifiedName();
-                final CharSequence classNamePrefix = classNamePrefixBuilder.toString();
-                final CharSequence sourceFilePrefix = packageName + "." + classNamePrefix;
 
                 String classComment = processingEnv.getElementUtils().getDocComment(classElement);
 
@@ -153,6 +140,25 @@ public class PrefsProcessor extends AbstractProcessor {
 
                 // Disable @Nullable generation
                 args.put("disableNullable", prefsAnnot.disableNullable());
+
+                final boolean classNamePrefixSpecified = !prefsAnnot.classNamePrefix().isEmpty();
+                final StringBuilder classNamePrefixBuilder = classNamePrefixSpecified
+                        ? null : new StringBuilder();
+                Element enclosingElement = classElement;
+                do {
+                    if (!classNamePrefixSpecified) {
+                        if (classNamePrefixBuilder.length() > 0) {
+                            classNamePrefixBuilder.insert(0, "$$");
+                        }
+                        classNamePrefixBuilder.insert(0, enclosingElement.getSimpleName());
+                    }
+                    enclosingElement = enclosingElement.getEnclosingElement();
+                } while(enclosingElement instanceof TypeElement);
+
+                final CharSequence packageName = ((QualifiedNameable) enclosingElement).getQualifiedName();
+                final CharSequence classNamePrefix = classNamePrefixSpecified
+                        ? prefsAnnot.classNamePrefix() : classNamePrefixBuilder.toString();
+                final CharSequence sourceFilePrefix = packageName + "." + classNamePrefix;
 
                 JavaFileObject javaFileObject = null;
                 try {
