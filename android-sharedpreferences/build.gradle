@@ -4,7 +4,7 @@ apply plugin: 'maven'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-group = 'org.jraf'
+group = 'com.lisb.android'
 version = '1.0.0'
 
 javadoc.failOnError = false
