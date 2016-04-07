@@ -25,6 +25,7 @@ package org.jraf.android.prefs.compiler;
 
 import java.io.Writer;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +38,9 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -76,8 +79,20 @@ public class PrefsProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for (TypeElement te : annotations) {
             for (Element element : roundEnv.getElementsAnnotatedWith(te)) {
-                TypeElement classElement = (TypeElement) element;
-                PackageElement packageElement = (PackageElement) classElement.getEnclosingElement();
+                final TypeElement classElement = (TypeElement) element;
+                final StringBuilder classNamePrefixBuilder = new StringBuilder();
+                Element enclosingElement = classElement;
+                do {
+                    if (classNamePrefixBuilder.length() > 0) {
+                        classNamePrefixBuilder.insert(0, "$$");
+                    }
+                    classNamePrefixBuilder.insert(0, enclosingElement.getSimpleName());
+                    enclosingElement = enclosingElement.getEnclosingElement();
+                } while(enclosingElement instanceof TypeElement);
+
+                final CharSequence packageName = ((QualifiedNameable) enclosingElement).getQualifiedName();
+                final CharSequence classNamePrefix = classNamePrefixBuilder.toString();
+                final CharSequence sourceFilePrefix = packageName + "." + classNamePrefix;
 
                 String classComment = processingEnv.getElementUtils().getDocComment(classElement);
 
@@ -142,19 +157,19 @@ public class PrefsProcessor extends AbstractProcessor {
                 JavaFileObject javaFileObject = null;
                 try {
                     // SharedPreferencesWrapper
-                    javaFileObject = processingEnv.getFiler().createSourceFile(classElement.getQualifiedName() + SUFFIX_PREF_WRAPPER);
+                    javaFileObject = processingEnv.getFiler().createSourceFile(sourceFilePrefix + SUFFIX_PREF_WRAPPER);
                     Template template = getFreemarkerConfiguration().getTemplate("prefwrapper.ftl");
-                    args.put("package", packageElement.getQualifiedName());
+                    args.put("package", packageName);
                     args.put("comment", classComment);
-                    args.put("prefWrapperClassName", classElement.getSimpleName() + SUFFIX_PREF_WRAPPER);
-                    args.put("editorWrapperClassName", classElement.getSimpleName() + SUFFIX_EDITOR_WRAPPER);
+                    args.put("prefWrapperClassName", classNamePrefix + SUFFIX_PREF_WRAPPER);
+                    args.put("editorWrapperClassName", classNamePrefix + SUFFIX_EDITOR_WRAPPER);
                     args.put("prefList", prefList);
                     Writer writer = javaFileObject.openWriter();
                     template.process(args, writer);
                     IOUtils.closeQuietly(writer);
 
                     // EditorWrapper
-                    javaFileObject = processingEnv.getFiler().createSourceFile(classElement.getQualifiedName() + "EditorWrapper");
+                    javaFileObject = processingEnv.getFiler().createSourceFile(sourceFilePrefix + "EditorWrapper");
                     template = getFreemarkerConfiguration().getTemplate("editorwrapper.ftl");
                     writer = javaFileObject.openWriter();
                     template.process(args, writer);

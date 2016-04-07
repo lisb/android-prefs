@@ -24,9 +24,12 @@
 package org.jraf.android.prefs.sample.app;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.jraf.android.prefs.DefaultBoolean;
+import org.jraf.android.prefs.Prefs;
 import org.jraf.android.prefs.sample.prefs.MainPrefs;
 import org.jraf.android.prefs.sample.prefs.SettingsPrefs;
 
@@ -50,5 +53,15 @@ public class MainActivity extends Activity {
         Log.d(TAG, "preferredColor=" + settingsPrefs.getPreferredColor());
         Log.d(TAG, "settingsPrefs=" + settingsPrefs.getAll());
 
+        MainActivity$$PersistPrefs persistPrefs = MainActivity$$PersistPrefs.get(this);
+        persistPrefs.putFirstTime(true);
+        Log.d(TAG, "firstTime=" + persistPrefs.getFirstTime());
+        Log.d(TAG, "persistPrefs=" + persistPrefs.getAll());
+    }
+
+    @Prefs(fileName = "MainActivity", fileMode = Context.MODE_PRIVATE)
+    static class Persist {
+        @DefaultBoolean(true)
+        Boolean firstTime;
     }
 }
