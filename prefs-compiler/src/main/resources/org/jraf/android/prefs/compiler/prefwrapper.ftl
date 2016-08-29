@@ -56,6 +56,13 @@ public class ${prefWrapperClassName} extends SharedPreferencesWrapper {
      * ${pref.comment?trim}
      */
     </#if><#t>
+    public static final String KEY_${pref.fieldName?replace("[A-Z]", "_$0", 'r')?upper_case} = "${pref.prefName}";
+
+    <#if pref.comment??>
+    /**
+     * ${pref.comment?trim}
+     */
+    </#if><#t>
     <#if !disableNullable && pref.defaultValue == "null">
     @Nullable
     </#if><#t>
