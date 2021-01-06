@@ -11,33 +11,40 @@ apply plugin: 'java'
 // Adds the 'provided' dependency, because the Java plugin doesn't have it!
 // See https://issues.gradle.org/browse/GRADLE-784
 apply plugin: 'provided-base'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-group = 'com.lisb.android'
-version = '2.0.0'
-
 javadoc.failOnError = false
+
+dependencies {
+    implementation project(':android-sharedpreferences')
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
+publishing {
+    repositories {
+        maven {
+            name = repository_name
+            url = repository_url
+            credentials {
+                username = localProps["gpr.user"] ?: System.getenv("GPR_USER")
+                password = localProps["gpr.key"] ?: System.getenv("GPR_KEY")
+            }
+        }
+    }
+    publications {
+        release(MavenPublication) {
+            from components.java
+            artifact tasks.sourcesJar
+            groupId = package_group
+            artifactId = 'prefs'
+            version = package_version
+        }
+    }
 }
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
-
-dependencies {
-    provided project(':android-sharedpreferences')
-}
-
-// Use "./gradlew install" to deploy the artifacts to your local maven repository
