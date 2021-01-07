@@ -34,7 +34,7 @@ publishing {
             from components.java
             artifact tasks.sourcesJar
             groupId = package_group
-            artifactId = 'prefs-complier'
+            artifactId = 'prefs-compiler'
             version = package_version
         }
     }
