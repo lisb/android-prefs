@@ -19,7 +19,7 @@ targetCompatibility = 1.6
 javadoc.failOnError = false
 
 dependencies {
-    implementation project(':android-sharedpreferences')
+    compileOnly project(':android-sharedpreferences')
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
